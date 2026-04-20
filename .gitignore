@@ -1,0 +1,7 @@
+# 깃허브 업로드 제외 목록
+.cache/
+.venv/
+__pycache__/
+*.db
+*.xlsx
+.env
