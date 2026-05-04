@@ -6,6 +6,8 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.Draw import rdMolDraw2D
 from PIL import Image, ImageDraw
+import streamlit as st
+import streamlit.components.v1 as components
 
 
 MOL_TAG_PATTERN = r'\[MOL:\s*(.+?)\s*,\s*ANGLE:\s*(.+?)\s*,\s*SHAPE:\s*(.+?)\s*\]'
@@ -253,3 +255,24 @@ def render_lewis_png(smiles: str, width: int = 400, height: int = 300) -> bytes:
     output = BytesIO()
     img.save(output, format='PNG')
     return output.getvalue()
+
+
+def display_assistant_message(text: str):
+    """
+    Parses the text for MOL tags, displays the cleaned text, 
+    and renders 3D visualization in Streamlit.
+    """
+    mol_tags = parse_mol_tags(text)
+    clean_text = remove_all_vis_tags(text)
+    
+    st.markdown(clean_text)
+    
+    for tag in mol_tags:
+        smiles = tag.get('smiles', '')
+        angle = tag.get('angle', '')
+        shape = tag.get('shape', '')
+        
+        if smiles:
+            html = generate_3dmol_html(smiles=smiles, angle=angle, shape=shape, height=350)
+            if html:
+                components.html(html, height=380, scrolling=False)
