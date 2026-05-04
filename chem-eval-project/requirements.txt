@@ -1,0 +1,9 @@
+streamlit
+pandas
+requests
+python-dotenv
+pytz
+google-genai
+streamlit-javascript
+rdkit
+Pillow
