@@ -1,6 +1,5 @@
 import os
 import json
-import time
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -70,36 +69,31 @@ def grade_performance_task(scenario: dict, student_answers: dict) -> dict:
 3. 온도 영역 - 파악: {student_answers.get('det3')} / 교정: {student_answers.get('cor3')}
 """
 
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash", # 최신 모델 적용 (기존 2.5 Flash 언급 반영 가능)
-                contents=[types.Content(role="user", parts=[types.Part(text=user_submission_context)])],
-                config=types.GenerateContentConfig(
-                    system_instruction=PERFORMANCE_GRADING_PROMPT,
-                    temperature=0.2, # 채점의 일관성을 위해 낮은 온도로 설정
-                    response_mime_type="application/json", # JSON 출력 강제
-                    response_schema=GradingResult, # Pydantic 모델을 스키마로 사용
-                    # max_output_tokens 제한 제거 (텍스트 잘림 현상 방지)
-                ),
-            )
-            
-            # SDK에서 제공하는 안전한 Pydantic 파싱 결과를 딕셔너리로 반환
-            if response.parsed:
-                return response.parsed.model_dump()
-            else:
-                return json.loads(response.text)
-            
-        except Exception as e:
-            if attempt < max_retries - 1:
-                time.sleep(2)
-                continue
-            # 오류 발생 시 기본값 반환 (전부 False 처리 방지)
-            print(f"채점 오류 발생 (시도 횟수 초과): {e}")
-            return {
-                "is_det_1_ok": False, "is_cor_1_ok": False,
-                "is_det_2_ok": False, "is_cor_2_ok": False,
-                "is_det_3_ok": False, "is_cor_3_ok": False,
-                "ai_feedback": "시스템 오류로 자동 채점이 중단되었습니다. 선생님께 문의하세요."
-            }
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", # 최신 모델 적용 (기존 2.5 Flash 언급 반영 가능)
+            contents=[types.Content(role="user", parts=[types.Part(text=user_submission_context)])],
+            config=types.GenerateContentConfig(
+                system_instruction=PERFORMANCE_GRADING_PROMPT,
+                temperature=0.2, # 채점의 일관성을 위해 낮은 온도로 설정
+                response_mime_type="application/json", # JSON 출력 강제
+                response_schema=GradingResult, # Pydantic 모델을 스키마로 사용
+                # max_output_tokens 제한 제거 (텍스트 잘림 현상 방지)
+            ),
+        )
+        
+        # SDK에서 제공하는 안전한 Pydantic 파싱 결과를 딕셔너리로 반환
+        if response.parsed:
+            return response.parsed.model_dump()
+        else:
+            return json.loads(response.text)
+        
+    except Exception as e:
+        # 오류 발생 시 기본값 반환 (전부 False 처리 방지)
+        print(f"채점 오류 발생: {e}")
+        return {
+            "is_det_1_ok": False, "is_cor_1_ok": False,
+            "is_det_2_ok": False, "is_cor_2_ok": False,
+            "is_det_3_ok": False, "is_cor_3_ok": False,
+            "ai_feedback": "시스템 오류로 자동 채점이 중단되었습니다. 선생님께 문의하세요."
+        }
