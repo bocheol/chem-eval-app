@@ -159,36 +159,41 @@ def performance_mode():
 
 # --- 결과 페이지 ---
 def show_result():
-    st.balloons()
     st.header("✅ 제출 완료!")
     st.success("수행평가 답안이 정상적으로 제출 및 채점되었습니다.")
     
-    sub = st.session_state.get("submission_data")
-    # if sub:
-    #     st.divider()
-    #     st.subheader("📊 AI 채점 결과 요약")
-    #     st.metric("최종 점수", f"{sub.get('final_score')} / 20.0 점")
-    #     
-    #     st.markdown("### 👩‍🏫 선생님(AI) 피드백")
-    #     st.info(sub.get('ai_feedback'))
-    #     
-    #     st.markdown("### 📝 세부 평가 내역")
-    #     scores = sub.get('scores', {})
-    #     cols = st.columns(3)
-    #     with cols[0]:
-    #         st.write("**[1. 농도]**")
-    #         st.caption(f"파악: {'✅' if scores.get('is_det_1_ok') else '❌'}")
-    #         st.caption(f"교정: {'✅' if scores.get('is_cor_1_ok') else '❌'}")
-    #     with cols[1]:
-    #         st.write("**[2. 압력]**")
-    #         st.caption(f"파악: {'✅' if scores.get('is_det_2_ok') else '❌'}")
-    #         st.caption(f"교정: {'✅' if scores.get('is_cor_2_ok') else '❌'}")
-    #     with cols[2]:
-    #         st.write("**[3. 온도]**")
-    #         st.caption(f"파악: {'✅' if scores.get('is_det_3_ok') else '❌'}")
-    #         st.caption(f"교정: {'✅' if scores.get('is_cor_3_ok') else '❌'}")
-
     st.info("실제 선생님의 최종 확인 후 생활기록부에 반영될 예정입니다. 수고하셨습니다!")
+    
+    st.divider()
+    if st.button("🔍 정답 및 채점 결과 확인", type="primary", use_container_width=True):
+        st.balloons()
+        sub = st.session_state.get("submission_data")
+        if sub:
+            st.subheader("📊 AI 채점 결과 요약")
+            st.metric("최종 점수", f"{sub.get('final_score')} / 20.0 점")
+            
+            st.markdown("### 👩‍🏫 선생님(AI) 피드백")
+            st.info(sub.get('ai_feedback', '피드백이 없습니다.'))
+            
+            st.markdown("### 📝 세부 평가 및 제출 답안 내역")
+            scores = sub.get('scores', {})
+            ans = sub.get('answers', {})
+            
+            tab1, tab2, tab3 = st.tabs(["[1] 농도 관련", "[2] 압력 관련", "[3] 온도 관련"])
+            with tab1:
+                st.caption(f"채점 결과 ➔ 파악: {'✅' if scores.get('is_det_1_ok') else '❌'} | 교정: {'✅' if scores.get('is_cor_1_ok') else '❌'}")
+                st.info(f"**[내가 파악한 오류]**\n\n{ans.get('det1', '내용 없음')}")
+                st.success(f"**[나의 정정 내용]**\n\n{ans.get('cor1', '내용 없음')}")
+            with tab2:
+                st.caption(f"채점 결과 ➔ 파악: {'✅' if scores.get('is_det_2_ok') else '❌'} | 교정: {'✅' if scores.get('is_cor_2_ok') else '❌'}")
+                st.info(f"**[내가 파악한 오류]**\n\n{ans.get('det2', '내용 없음')}")
+                st.success(f"**[나의 정정 내용]**\n\n{ans.get('cor2', '내용 없음')}")
+            with tab3:
+                st.caption(f"채점 결과 ➔ 파악: {'✅' if scores.get('is_det_3_ok') else '❌'} | 교정: {'✅' if scores.get('is_cor_3_ok') else '❌'}")
+                st.info(f"**[내가 파악한 오류]**\n\n{ans.get('det3', '내용 없음')}")
+                st.success(f"**[나의 정정 내용]**\n\n{ans.get('cor3', '내용 없음')}")
+
+    st.divider()
     if st.button("처음으로 돌아가기"):
         st.session_state.submitted = False
         st.session_state.submission_data = None
