@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 import urllib.parse
 from datetime import datetime
@@ -112,13 +113,24 @@ def save_performance_submission(student_id, scenario_id, answers, result):
     post_headers = headers.copy()
     post_headers["Prefer"] = "return=representation"
     
-    resp = requests.post(f"{base_url}/submissions", headers=post_headers, json=payload, verify=False)
-    
-    if resp.status_code in (200, 201):
-        return payload
-    else:
-        st.error(f"제출 데이터 저장 중 오류가 발생했습니다: {resp.text}")
-        return None
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(f"{base_url}/submissions", headers=post_headers, json=payload, verify=False, timeout=10)
+            if resp.status_code in (200, 201):
+                return payload
+            else:
+                if attempt < max_retries - 1:
+                    time.sleep(1.5)
+                    continue
+                st.error(f"제출 데이터 저장 중 오류가 발생했습니다: {resp.text}")
+                return None
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(1.5)
+                continue
+            st.error(f"네트워크 오류로 서버 접속에 실패했습니다: {str(e)}")
+            return None
 
 # --- [기존 기능 유지용 - 필요 시 활성화] ---
 
